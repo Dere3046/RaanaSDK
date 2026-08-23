@@ -37,6 +37,16 @@ docker run --rm \
 	"$RUST_IMAGE" \
 	sh -c 'scripts/build-rust.sh'
 
+echo "== regenerate exports for $TARGET =="
+docker run --rm \
+	-e KDIR=/opt/ddk/kdir/${TARGET} \
+	-e VER=${TARGET} \
+	-e MAX_SYMBOL_LEN=${MAX_SYMBOL_LEN} \
+	-v "$SRCDIR":/src \
+	-w /src \
+	"$IMAGE" \
+	sh -c 'OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN="$1" scripts/gen-exports.sh out/$2/rust/core.o out/$2/rust/compiler_builtins.o out/$2/rust/rust_support_rust.o' sh "$MAX_SYMBOL_LEN" "$TARGET"
+
 echo "== build C + link ($TARGET) =="
 # 6.1+ uses modpost fix wrapper
 # 5.10 5.15 keeps normal path

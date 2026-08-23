@@ -10,6 +10,7 @@
 
 #define EXPORT_SYMBOL_RUST_GPL(sym) extern int sym; EXPORT_SYMBOL_GPL(sym)
 
+#ifndef CONFIG_RUST
 EXPORT_SYMBOL_GPL(rust_helper_BUG);
 EXPORT_SYMBOL_GPL(rust_helper_ERR_PTR);
 EXPORT_SYMBOL_GPL(rust_helper_IS_ERR);
@@ -53,6 +54,7 @@ EXPORT_SYMBOL_GPL(rust_helper_get_cred);
 EXPORT_SYMBOL_GPL(rust_helper_put_cred);
 EXPORT_SYMBOL_GPL(rust_helper_get_file);
 EXPORT_SYMBOL_GPL(rust_helper_i_size_read);
+#endif
 
 EXPORT_SYMBOL_GPL(rs_errname);
 EXPORT_SYMBOL_GPL(rs_kvrealloc);
