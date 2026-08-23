@@ -24,6 +24,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: rust-runtime
+          include-hidden-files: true
           path: |
             out/android16-6.12/rust
             src/exports_rust_generated.h
@@ -65,6 +66,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: rust_support-${{ matrix.kmi }}
+          include-hidden-files: true
           path: |
             out/${{ matrix.kmi }}/rust_support.ko
             out/${{ matrix.kmi }}/Module.symvers
