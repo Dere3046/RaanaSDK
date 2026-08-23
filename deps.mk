@@ -1,0 +1,4 @@
+DEPS_LIB_NAME := rust_support
+DEPS_LIB_OBJS :=
+DEPS_LIB_INCS :=
+DEPS_LIB_DEPS :=
