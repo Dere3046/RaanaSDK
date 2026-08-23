@@ -51,7 +51,10 @@ jobs:
           name: rust-runtime
           path: rust-artifact
       - name: Fetch deps
-        run: ./scripts/fetch-deps.sh
+        run: |
+          git clone https://github.com/Dere3046/KMSDK.git .sdk
+          git -C .sdk checkout "$(cat .sdk-version)"
+          ./scripts/fetch-deps.sh
       - name: Prepare Rust artifacts
         run: |
           mkdir -p "out/${{ matrix.kmi }}/rust"
