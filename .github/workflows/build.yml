@@ -1,13 +1,6 @@
 name: Build All GKI
 on:
   push:
-    paths:
-      - 'rust/**'
-      - 'src/**'
-      - 'scripts/**'
-      - 'Makefile'
-      - 'deps.lst'
-      - '.github/workflows/build.yml'
   workflow_dispatch:
 
 jobs:
