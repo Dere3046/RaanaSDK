@@ -13,7 +13,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build Rust runtime
         run: |
-          KDIR=/opt/ddk/kdir/android16-6.12 VER=android16-6.12 ./scripts/build-rust.sh
+          KDIR=/opt/ddk/kdir/android16-6.12 VER=android16-6.12 SKIP_RUST_FMT=1 ./scripts/build-rust.sh
       - uses: actions/upload-artifact@v4
         with:
           name: rust-runtime
@@ -61,7 +61,12 @@ jobs:
               MAX=0
               ;;
           esac
-          OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN=$MAX \
+          if [ "${{ matrix.kmi }}" = "android16-6.12" ]; then
+            SKIP=1
+          else
+            SKIP=0
+          fi
+          OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN=$MAX SKIP_RUST_FMT=$SKIP \
             scripts/gen-exports.sh \
             "out/${{ matrix.kmi }}/rust/core.o" \
             "out/${{ matrix.kmi }}/rust/compiler_builtins.o" \

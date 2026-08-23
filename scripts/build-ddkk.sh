@@ -18,6 +18,16 @@ case "$TARGET" in
 		;;
 esac
 
+# real 6.12 GKI has CONFIG_RUST=y and owns rust_fmt_argument
+case "$TARGET" in
+	android16-6.12)
+		SKIP_RUST_FMT=${SKIP_RUST_FMT:-1}
+		;;
+	*)
+		SKIP_RUST_FMT=${SKIP_RUST_FMT:-0}
+		;;
+esac
+
 echo "== clean ($TARGET) =="
 docker run --rm \
 	-e KDIR=/opt/ddk/kdir/${TARGET} \
@@ -32,6 +42,7 @@ docker run --rm \
 	-e KDIR=/opt/ddk/kdir/android16-6.12 \
 	-e VER=${TARGET} \
 	-e MAX_SYMBOL_LEN=${MAX_SYMBOL_LEN} \
+	-e SKIP_RUST_FMT=${SKIP_RUST_FMT} \
 	-v "$SRCDIR":/src \
 	-w /src \
 	"$RUST_IMAGE" \
@@ -42,6 +53,7 @@ docker run --rm \
 	-e KDIR=/opt/ddk/kdir/${TARGET} \
 	-e VER=${TARGET} \
 	-e MAX_SYMBOL_LEN=${MAX_SYMBOL_LEN} \
+	-e SKIP_RUST_FMT=${SKIP_RUST_FMT} \
 	-v "$SRCDIR":/src \
 	-w /src \
 	"$IMAGE" \

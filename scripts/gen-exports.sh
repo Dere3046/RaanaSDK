@@ -11,10 +11,6 @@ if [ "$#" -eq 0 ]; then
 fi
 
 SKIP_RUST_FMT="${SKIP_RUST_FMT:-0}"
-if [ "$SKIP_RUST_FMT" = "0" ] && [ -n "$KDIR" ] &&
-	grep -q "CONFIG_RUST=y" "$KDIR/include/generated/autoconf.h" 2>/dev/null; then
-	SKIP_RUST_FMT=1
-fi
 
 : > "$OUT"
 for OBJ in "$@"; do
