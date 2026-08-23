@@ -1,7 +1,5 @@
 #!/bin/sh
-# deploy deps through the LKM-SDK at the pinned rev
-# .sdk-version pins the SDK, cloned once into .sdk/ (gitignored)
-# a rev that is not a commit id falls back to the SDK default branch
+# install deps via KMSDK at pinned rev
 set -e
 
 cd "$(dirname "$0")/.."

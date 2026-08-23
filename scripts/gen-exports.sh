@@ -1,0 +1,26 @@
+#!/bin/sh
+set -e
+
+ROOT="$(cd "$(dirname "$0")/.." && pwd)"
+OUT="${OUT:-$ROOT/src/exports_rust_generated.h}"
+
+if [ "$#" -eq 0 ]; then
+	echo "// empty" > "$OUT"
+	echo "-> $OUT"
+	exit 0
+fi
+
+: > "$OUT"
+for OBJ in "$@"; do
+	if [ ! -f "$OBJ" ]; then
+		echo "// missing $OBJ" >> "$OUT"
+		continue
+	fi
+	MAX="${MAX_SYMBOL_LEN:-0}"
+	nm -p --defined-only "$OBJ" |
+		awk -v max="$MAX" '$2 ~ /^[TRDB]$/ && $3 !~ /^__cfi/ && $3 !~ /^__odr_asan/ && (max == 0 || length($3) <= max) {
+			printf "EXPORT_SYMBOL_RUST_GPL(%s);\n", $3
+		}' >> "$OUT"
+done
+
+echo "-> $OUT"
