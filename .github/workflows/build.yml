@@ -60,9 +60,31 @@ jobs:
         run: |
           mkdir -p "out/${{ matrix.kmi }}/rust"
           cp -a rust-artifact/out/android16-6.12/rust/. "out/${{ matrix.kmi }}/rust/"
-          cp rust-artifact/src/exports_rust_generated.h src/exports_rust_generated.h
+          case "${{ matrix.kmi }}" in
+            android12-5.10|android13-5.10|android13-5.15|android14-5.15)
+              MAX=400
+              ;;
+            *)
+              MAX=0
+              ;;
+          esac
+          OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN=$MAX \
+            scripts/gen-exports.sh \
+            "out/${{ matrix.kmi }}/rust/core.o" \
+            "out/${{ matrix.kmi }}/rust/compiler_builtins.o" \
+            "out/${{ matrix.kmi }}/rust/rust_support_rust.o"
       - name: Build
-        run: make VER=${{ matrix.kmi }}
+        run: |
+          case "${{ matrix.kmi }}" in
+            android14-6.1|android15-6.6|android16-6.12)
+              make VER=${{ matrix.kmi }} \
+                MODPOST="$PWD/scripts/fix-modpost-wrapper.sh" \
+                REAL_MODPOST="/opt/ddk/kdir/${{ matrix.kmi }}/scripts/mod/modpost"
+              ;;
+            *)
+              make VER=${{ matrix.kmi }}
+              ;;
+          esac
       - uses: actions/upload-artifact@v4
         with:
           name: rust_support-${{ matrix.kmi }}
