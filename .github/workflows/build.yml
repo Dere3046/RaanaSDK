@@ -1,0 +1,68 @@
+name: Build All GKI
+on:
+  push:
+    paths:
+      - 'rust/**'
+      - 'src/**'
+      - 'scripts/**'
+      - 'Makefile'
+      - 'deps.lst'
+      - '.github/workflows/build.yml'
+  workflow_dispatch:
+
+jobs:
+  build-rust:
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ylarod/ddk-min:android16-6.12-20260313
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - name: Build Rust runtime
+        run: |
+          KDIR=/opt/ddk/kdir/android16-6.12 VER=android16-6.12 ./scripts/build-rust.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rust-runtime
+          path: |
+            out/android16-6.12/rust
+            src/exports_rust_generated.h
+
+  build-matrix:
+    needs: build-rust
+    strategy:
+      matrix:
+        kmi:
+          - android12-5.10
+          - android13-5.10
+          - android13-5.15
+          - android14-5.15
+          - android14-6.1
+          - android15-6.6
+          - android16-6.12
+    runs-on: ubuntu-latest
+    container:
+      image: ghcr.io/ylarod/ddk-min:${{ matrix.kmi }}-20260313
+      options: --privileged
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: rust-runtime
+          path: rust-artifact
+      - name: Fetch deps
+        run: ./scripts/fetch-deps.sh
+      - name: Prepare Rust artifacts
+        run: |
+          mkdir -p "out/${{ matrix.kmi }}/rust"
+          cp -a rust-artifact/out/android16-6.12/rust/. "out/${{ matrix.kmi }}/rust/"
+          cp rust-artifact/src/exports_rust_generated.h src/exports_rust_generated.h
+      - name: Build
+        run: make VER=${{ matrix.kmi }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: rust_support-${{ matrix.kmi }}
+          path: |
+            out/${{ matrix.kmi }}/rust_support.ko
+            out/${{ matrix.kmi }}/Module.symvers
+            out/${{ matrix.kmi }}/rust
