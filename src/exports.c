@@ -10,7 +10,7 @@
 
 #define EXPORT_SYMBOL_RUST_GPL(sym) extern int sym; EXPORT_SYMBOL_GPL(sym)
 
-#ifndef CONFIG_RUST
+#if !defined(CONFIG_RUST) && !defined(SKIP_RUST_HELPERS)
 EXPORT_SYMBOL_GPL(rust_helper_BUG);
 EXPORT_SYMBOL_GPL(rust_helper_ERR_PTR);
 EXPORT_SYMBOL_GPL(rust_helper_IS_ERR);

@@ -22,6 +22,12 @@ ccflags-y += -Wno-strict-prototypes
 ccflags-y += -I$(src)/lib
 ccflags-y += $(addprefix -I$(src)/,$(DEPS_INCS_ALL))
 
+# Real GKI kernels with CONFIG_RUST=y already export rust_helper_*.
+# DDK min images do not define CONFIG_RUST in autoconf, so control it explicitly.
+ifeq ($(SKIP_RUST_HELPERS),1)
+ccflags-y += -DSKIP_RUST_HELPERS
+endif
+
 $(info -- KDIR: $(KDIR))
 $(info -- MDIR: $(MDIR))
 $(info -- ODIR: $(ODIR))

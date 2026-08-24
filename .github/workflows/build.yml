@@ -66,6 +66,7 @@ jobs:
           else
             SKIP=0
           fi
+          echo "SKIP_RUST_HELPERS=$SKIP" >> "$GITHUB_ENV"
           OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN=$MAX SKIP_RUST_FMT=$SKIP \
             scripts/gen-exports.sh \
             "out/${{ matrix.kmi }}/rust/core.o" \

@@ -28,6 +28,16 @@ case "$TARGET" in
 		;;
 esac
 
+# real 6.12 GKI also exports rust_helper_* itself; avoid duplicate exports
+case "$TARGET" in
+	android16-6.12)
+		SKIP_RUST_HELPERS=${SKIP_RUST_HELPERS:-1}
+		;;
+	*)
+		SKIP_RUST_HELPERS=${SKIP_RUST_HELPERS:-0}
+		;;
+esac
+
 echo "== clean ($TARGET) =="
 docker run --rm \
 	-e KDIR=/opt/ddk/kdir/${TARGET} \
@@ -70,6 +80,7 @@ docker run --rm \
 	-e KDIR=/opt/ddk/kdir/${TARGET} \
 	-e VER=${TARGET} \
 	-e REAL_MODPOST=/opt/ddk/kdir/${TARGET}/scripts/mod/modpost \
+	-e SKIP_RUST_HELPERS=${SKIP_RUST_HELPERS} \
 	-v "$SRCDIR":/src \
 	-w /src \
 	"$IMAGE" \
