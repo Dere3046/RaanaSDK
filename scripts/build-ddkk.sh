@@ -11,10 +11,16 @@ SRCDIR=$(cd "$(dirname "$0")/.." && pwd)
 # newer targets use full exports via modpost fix
 case "$TARGET" in
 	android12-5.10|android13-5.10|android13-5.15|android14-5.15)
-		MAX_SYMBOL_LEN=400
+		SHORT_ALIAS=${SHORT_ALIAS:-1}
+		if [ "$SHORT_ALIAS" = "1" ]; then
+			MAX_SYMBOL_LEN=0
+		else
+			MAX_SYMBOL_LEN=${MAX_SYMBOL_LEN:-400}
+		fi
 		;;
 	*)
 		MAX_SYMBOL_LEN=0
+		SHORT_ALIAS=${SHORT_ALIAS:-0}
 		;;
 esac
 
@@ -28,7 +34,8 @@ case "$TARGET" in
 		;;
 esac
 
-# real 6.12 GKI also exports rust_helper_* itself; avoid duplicate exports
+# real 6.12 GKI owns rust_helper_* exports
+# skip to avoid duplicate
 case "$TARGET" in
 	android16-6.12)
 		SKIP_RUST_HELPERS=${SKIP_RUST_HELPERS:-1}
@@ -64,18 +71,31 @@ docker run --rm \
 	-e VER=${TARGET} \
 	-e MAX_SYMBOL_LEN=${MAX_SYMBOL_LEN} \
 	-e SKIP_RUST_FMT=${SKIP_RUST_FMT} \
+	-e SHORT_ALIAS=${SHORT_ALIAS} \
+	-e ALIAS_MAP=/src/out/${TARGET}/rust_sym_map.txt \
 	-v "$SRCDIR":/src \
 	-w /src \
 	"$IMAGE" \
 	sh -c 'OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN="$1" scripts/gen-exports.sh out/$2/rust/core.o out/$2/rust/compiler_builtins.o out/$2/rust/rust_support_rust.o' sh "$MAX_SYMBOL_LEN" "$TARGET"
 
+if [ "$SHORT_ALIAS" = "1" ]; then
+	echo "== apply short aliases to rust objects =="
+	docker run --rm \
+		-v "$SRCDIR":/src \
+		-w /src \
+		"$RUST_IMAGE" \
+		sh -c 'scripts/apply-aliases.sh out/$1/rust_sym_map.txt out/$1/rust/core.o out/$1/rust/compiler_builtins.o out/$1/rust/rust_support_rust.o' sh "$TARGET"
+fi
+
 echo "== build C + link ($TARGET) =="
 # 6.1+ uses modpost fix wrapper
 # 5.10 5.15 keeps normal path
 MODPOST_ARG=""
-if [ "$MAX_SYMBOL_LEN" = "0" ]; then
-	MODPOST_ARG="MODPOST=/src/scripts/fix-modpost-wrapper.sh"
-fi
+case "$TARGET" in
+	android14-6.1|android15-6.6|android16-6.12)
+		MODPOST_ARG="MODPOST=/src/scripts/fix-modpost-wrapper.sh"
+		;;
+esac
 docker run --rm \
 	-e KDIR=/opt/ddk/kdir/${TARGET} \
 	-e VER=${TARGET} \

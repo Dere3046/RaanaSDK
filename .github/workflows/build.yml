@@ -55,10 +55,12 @@ jobs:
           cp -a rust-artifact/out/android16-6.12/rust/. "out/${{ matrix.kmi }}/rust/"
           case "${{ matrix.kmi }}" in
             android12-5.10|android13-5.10|android13-5.15|android14-5.15)
-              MAX=400
+              SHORT_ALIAS=1
+              MAX=0
               ;;
             *)
               MAX=0
+              SHORT_ALIAS=0
               ;;
           esac
           if [ "${{ matrix.kmi }}" = "android16-6.12" ]; then
@@ -67,13 +69,21 @@ jobs:
             SKIP=0
           fi
           echo "SKIP_RUST_HELPERS=$SKIP" >> "$GITHUB_ENV"
+          echo "SHORT_ALIAS=$SHORT_ALIAS" >> "$GITHUB_ENV"
           OUT=src/exports_rust_generated.h MAX_SYMBOL_LEN=$MAX SKIP_RUST_FMT=$SKIP \
+            SHORT_ALIAS=$SHORT_ALIAS ALIAS_MAP="out/${{ matrix.kmi }}/rust_sym_map.txt" \
             scripts/gen-exports.sh \
             "out/${{ matrix.kmi }}/rust/core.o" \
             "out/${{ matrix.kmi }}/rust/compiler_builtins.o" \
             "out/${{ matrix.kmi }}/rust/rust_support_rust.o"
       - name: Build
         run: |
+          if [ "$SHORT_ALIAS" = "1" ]; then
+            ./scripts/apply-aliases.sh "out/${{ matrix.kmi }}/rust_sym_map.txt" \
+              "out/${{ matrix.kmi }}/rust/core.o" \
+              "out/${{ matrix.kmi }}/rust/compiler_builtins.o" \
+              "out/${{ matrix.kmi }}/rust/rust_support_rust.o"
+          fi
           case "${{ matrix.kmi }}" in
             android14-6.1|android15-6.6|android16-6.12)
               make VER=${{ matrix.kmi }} \
@@ -91,4 +101,5 @@ jobs:
           path: |
             out/${{ matrix.kmi }}/rust_support.ko
             out/${{ matrix.kmi }}/Module.symvers
+            out/${{ matrix.kmi }}/rust_sym_map.txt
             out/${{ matrix.kmi }}/rust
